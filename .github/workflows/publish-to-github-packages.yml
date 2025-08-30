@@ -16,11 +16,9 @@ jobs:
     strategy:
       matrix:
         project:
-          - path: '/Mediator.Abstractions/Mediator.Abstractions.csproj'
-            id: 'Abstractions'
-          - path: '/Mediator.Samples/Mediator.Samples.csproj'
-            id: 'Samples'
-          - path: '/Mediator/Mediator.csproj'
+          - path: 'Mediator.Abstractions/Mediator.Abstractions.csproj'
+            id: 'Abstractions'         
+          - path: 'Mediator/Mediator.csproj'
             id: 'Mediator'
     steps:
       - name: Checkout
