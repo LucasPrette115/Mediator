@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>    
+    <Company>Leprette</Company>
+    <Authors>Leprette</Authors>
+    <RepositoryUrl>https://github.com/LucasPrette115/Mediator.git</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/LucasPrette115/Mediator.git</PackageProjectUrl>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IncludeSymbols>false</IncludeSymbols>
+  </PropertyGroup>
+</Project>

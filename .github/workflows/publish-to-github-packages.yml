@@ -1,0 +1,74 @@
+name: Publish NuGet packages to GitHub Packages
+
+on:
+  push:
+    tags:
+      - 'v*'           # publica quando criar tag v1.0.0
+  workflow_dispatch:   # permite rodar manualmente
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project:
+          - path: '/Mediator.Abstractions/Mediator.Abstractions.csproj'
+            id: 'Abstractions'
+          - path: '/Mediator.Samples/Mediator.Samples.csproj'
+            id: 'Samples'
+          - path: '/Mediator/Mediator.csproj'
+            id: 'Mediator'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Set package version
+        id: set_version
+        run: |
+          echo "GITHUB_REF=$GITHUB_REF"
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+            # remove leading v se houver: v1.2.3 -> 1.2.3
+            VERSION="${TAG#v}"
+          else
+            # fallback: versão baseada no commit (pré-release)
+            SHORT_SHA=${GITHUB_SHA::7}
+            VERSION="0.0.0-${SHORT_SHA}"
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "Version set to $VERSION"
+
+      - name: Restore dependencies for project
+        run: dotnet restore "${{ matrix.project.path }}"
+
+      - name: Build
+        run: dotnet build "${{ matrix.project.path }}" -c Release --no-restore
+
+      - name: Pack project
+        run: |
+          mkdir -p ./nupkg
+          dotnet pack "${{ matrix.project.path }}" -c Release -o ./nupkg /p:PackageVersion=$VERSION --no-build
+
+      - name: Push package to GitHub Packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          nupkg_files=(./nupkg/*.nupkg)
+          if [ -e "${nupkg_files[0]}" ]; then
+            for f in ./nupkg/*.nupkg; do
+              echo "Pushing $f"
+              dotnet nuget push "$f" -k "$GITHUB_TOKEN" -s "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --skip-duplicate
+            done
+          else
+            echo "No nupkg found for ${{ matrix.project.path }}"
+            exit 1
+          fi
