@@ -10,7 +10,7 @@ public static class MediatorExtensions
         this IServiceCollection services,
         params Assembly[] assemblies)
     {
-        services.AddTransient<IMediator, Mediator>();
+        services.AddScoped<IMediator, Mediator>();
 
         var handlerType = typeof(IHandler<,>);
         var notificationType = typeof(INotificationHandler<>);
@@ -28,10 +28,10 @@ public static class MediatorExtensions
                 .Where(t => t.Interface.IsGenericType && t.Interface.GetGenericTypeDefinition() == notificationType);
 
             foreach (var notification in notifications)
-                services.AddTransient(notification.Interface, notification.Type);
+                services.AddScoped(notification.Interface, notification.Type);
 
             foreach (var handler in handlers)
-                services.AddTransient(handler.Interface, handler.Type);
+                services.AddScoped(handler.Interface, handler.Type);
 
         }        
 
