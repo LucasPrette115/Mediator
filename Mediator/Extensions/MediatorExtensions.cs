@@ -13,6 +13,7 @@ public static class MediatorExtensions
         services.AddTransient<IMediator, Mediator>();
 
         var handlerType = typeof(IHandler<,>);
+        var notificationType = typeof(INotificationHandler<>);
 
         foreach (var assembly in assemblies)
         {
@@ -21,9 +22,18 @@ public static class MediatorExtensions
                 .SelectMany(x => x.GetInterfaces(), (t, i) => new { Type = t, Interface = i })
                 .Where(t => t.Interface.IsGenericType && t.Interface.GetGenericTypeDefinition() == handlerType);
 
+            var notifications = assembly.GetTypes()
+                .Where(type => !type.IsAbstract && !type.IsInterface)
+                .SelectMany(x => x.GetInterfaces(), (t, i) => new { Type = t, Interface = i })
+                .Where(t => t.Interface.IsGenericType && t.Interface.GetGenericTypeDefinition() == notificationType);
+
+            foreach (var notification in notifications)
+                services.AddTransient(notification.Interface, notification.Type);
+
             foreach (var handler in handlers)
                 services.AddTransient(handler.Interface, handler.Type);
-        }
+
+        }        
 
         return services;
     }
